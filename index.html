@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Why dahlia centers form Fibonacci spirals: the golden angle, square-root spacing, and a live phyllotaxis simulation.">
+<meta name="theme-color" content="#ffffff">
+<title>Why do dahlias grow in spirals?</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#475569; --soft:#64748b;
+    --panel:#f8fafc; --amber:#b45309; --seed:#f59e0b;
+    --cw:#0e7490; --ccw:#a21caf;
+  }
+  *{box-sizing:border-box}
+  html{scroll-snap-type:y proximity; scroll-behavior:smooth}
+  body{
+    margin:0; background:#fff; color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  main{display:block}
+  .panel{
+    min-height:100vh; min-height:100svh; display:grid; align-content:center;
+    padding:clamp(28px,7vh,80px) 0; scroll-snap-align:start;
+  }
+  .wrap{width:min(calc(100% - clamp(32px,8vw,128px)),1060px); margin-inline:auto}
+
+  .kicker{
+    margin:0; font-size:.72rem; font-weight:800; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--amber);
+  }
+  h1{
+    margin:.18em 0 .32em; font-size:clamp(2.1rem,5.2vw,4.2rem);
+    line-height:1.02; letter-spacing:-.035em; font-weight:800;
+  }
+  h2{
+    margin:.12em 0 .5em; font-size:clamp(1.6rem,3.6vw,2.75rem);
+    line-height:1.08; letter-spacing:-.03em; font-weight:800;
+  }
+  h3{margin:0; font-size:clamp(1.1rem,1.8vw,1.35rem); letter-spacing:-.01em}
+  p{margin:0}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  strong{color:var(--ink)}
+  .lede{
+    font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.55; color:var(--muted);
+    max-width:46ch;
+  }
+  .note{
+    font-size:clamp(.9rem,1.15vw,.98rem); line-height:1.55; color:var(--muted);
+    max-width:54ch; margin-top:14px;
+  }
+  .hint{
+    margin-top:26px; font-size:.78rem; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--soft);
+  }
+
+  .intro{
+    display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+    gap:clamp(28px,5vw,72px); align-items:center;
+  }
+  .intro figure{margin:0}
+  .intro img{
+    display:block; width:100%; aspect-ratio:3/4; max-height:64svh; object-fit:cover;
+    border-radius:22px; box-shadow:0 24px 60px -24px rgba(15,23,42,.35);
+  }
+
+  .rules{
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(14px,2vw,24px); margin:clamp(20px,3vh,34px) 0 0;
+  }
+  .card{
+    background:var(--panel); border-radius:18px; padding:clamp(18px,2.4vw,30px);
+    box-shadow:0 1px 2px rgba(15,23,42,.04),0 14px 36px -18px rgba(15,23,42,.16);
+  }
+  .card .num{
+    font-size:.75rem; font-weight:800; letter-spacing:.1em; color:var(--cw);
+  }
+  .card:nth-child(2) .num{color:var(--ccw)}
+  .card h3{margin:.55rem 0 .35rem}
+  .card p{color:var(--muted); line-height:1.5; font-size:clamp(.95rem,1.2vw,1.02rem)}
+  .formula{
+    display:inline-block; margin-top:.85rem; padding:.32rem .6rem; border-radius:8px;
+    background:#fff; color:var(--ink); font-weight:600;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.92rem;
+  }
+
+  .split{
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:clamp(24px,4vw,60px); align-items:center;
+  }
+  .canvas-box{display:flex; flex-direction:column; align-items:center; gap:12px}
+  canvas{display:block; touch-action:manipulation}
+  #growthCanvas,#simCanvas{
+    width:min(100%,420px); width:min(100%,44svh,420px); aspect-ratio:1/1;
+  }
+  .legend{
+    display:flex; gap:18px; justify-content:center;
+    font-size:.78rem; font-weight:700; color:var(--muted);
+  }
+  .legend i{
+    display:inline-block; width:18px; height:3px; border-radius:2px;
+    background:currentColor; margin-right:6px; vertical-align:middle;
+  }
+  .legend .cw{color:var(--cw)}
+  .legend .ccw{color:var(--ccw)}
+  .legend.is-overlap .ccw{opacity:.28}
+  .status{
+    min-height:2.4em; max-width:34ch; text-align:center;
+    font-size:.82rem; line-height:1.45; color:var(--muted);
+  }
+  .curve-box{
+    max-width:820px; margin:18px auto 0; padding:12px 12px 8px;
+    background:var(--panel); border-radius:16px; position:relative;
+  }
+  #curveCanvas{display:block; width:100%; height:auto; aspect-ratio:1.8/1}
+  .curve-note{max-width:60ch; margin-top:10px}
+  .curve-tooltip{
+    position:absolute; z-index:2; pointer-events:none; transform:translate(-50%,-100%);
+    padding:5px 8px; border-radius:7px; background:#0f172a; color:#fff;
+    font-size:.72rem; font-weight:800; white-space:nowrap; box-shadow:0 3px 12px #0f172a33;
+  }
+  .curve-reference{margin-top:7px; font-size:.72rem; line-height:1.45; color:var(--soft)}
+  .formula-details{max-width:60ch; margin:14px auto 0; color:var(--soft)}
+  .formula-details summary{
+    cursor:pointer; color:var(--muted); font-size:.76rem; font-weight:800;
+    letter-spacing:.02em;
+  }
+  .formula-note{
+    margin:10px 0 0; padding:12px 14px; border-left:3px solid var(--amber);
+    background:#fff; color:var(--muted); font-size:.76rem; line-height:1.5;
+  }
+  .formula-note p{margin:0 0 6px}
+  .formula-note p:last-child{margin-bottom:0}
+  .formula-line{font-size:.86rem; color:var(--ink)}
+  .formula-note code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--ink)}
+
+  .counts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px}
+  .count-item{
+    display:block; width:100%; background:var(--panel); border:0; border-radius:14px;
+    padding:12px 14px; color:inherit; font:inherit; text-align:left; cursor:pointer;
+    transition:background .15s ease,box-shadow .15s ease;
+  }
+  .count-item:hover{background:#eef2f7}
+  .count-item[aria-pressed=true]{box-shadow:inset 0 0 0 2px #cbd5e1}
+  .count-item span{
+    display:block; font-size:.64rem; font-weight:800; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--soft); margin-bottom:2px;
+  }
+  .count-item strong{
+    font-size:clamp(1.7rem,3vw,2.2rem); font-weight:800; line-height:1.05;
+    font-variant-numeric:tabular-nums;
+  }
+  .count-item.cw strong{color:var(--cw)}
+  .count-item.ccw strong{color:var(--ccw)}
+  .ratio{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.9rem; color:var(--muted); margin-bottom:6px;
+  }
+  .ratio b{color:var(--ink)}
+  .ratio .cw{color:var(--cw)}
+  .ratio .ccw{color:var(--ccw)}
+  .metric-note{font-size:.72rem; line-height:1.4; color:var(--soft); margin:0 0 2px}
+  .bio{margin-top:10px}
+
+  .field{
+    display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    margin:18px 0 4px; font-size:.82rem; font-weight:700; letter-spacing:.02em;
+    color:var(--muted);
+  }
+  .field output{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.95rem; color:var(--ink); font-weight:700;
+  }
+  input[type=range]{
+    width:100%; margin:0; height:28px; accent-color:#b45309; cursor:pointer;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+  .chip,.presets button{
+    appearance:none; border:0; background:#eef2f7; color:#334155;
+    font:inherit; font-size:.82rem; font-weight:700; cursor:pointer;
+  }
+  .chip{padding:.45rem .72rem; border-radius:999px}
+  .chip:hover,.presets button:hover{background:#e2e8f0}
+  .chip[aria-pressed=true],.presets button[aria-pressed=true]{
+    background:var(--seed); color:#111827;
+  }
+  .chip.toggle{background:#fff; box-shadow:inset 0 0 0 1px #dbe3ec}
+  #numberToggle{margin-left:auto}
+  .chip.toggle[aria-pressed=true]{background:var(--ink); color:#fff; box-shadow:none}
+  .presets{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px}
+  .presets button{padding:.55rem .5rem; border-radius:10px; line-height:1.15}
+  .presets button small{
+    display:block; margin-top:3px; font-size:.64rem; font-weight:600;
+    letter-spacing:.02em; color:var(--muted);
+  }
+  .presets button[aria-pressed=true] small{color:#111827}
+  .play{
+    width:100%; margin-top:20px; padding:.72rem; border:0; border-radius:12px;
+    background:var(--ink); color:#fff; font:inherit; font-weight:700; cursor:pointer;
+    transition:background .15s ease;
+  }
+  .play:hover{background:#1e293b}
+  .play:active{transform:translateY(1px)}
+
+  .dots{
+    position:fixed; right:clamp(12px,2vw,24px); top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:2px; z-index:10;
+  }
+  .dots a{
+    display:grid; place-items:center; width:28px; height:28px;
+    border-radius:999px; text-decoration:none;
+  }
+  .dots a::before{
+    content:""; display:block; width:7px; height:7px; border-radius:999px;
+    background:#64748b; transition:background .18s ease,width .18s ease;
+  }
+  .dots a:hover::before{background:#475569}
+  .dots a[aria-current=true]::before{background:var(--amber); width:20px}
+  :focus-visible{outline:2px solid var(--ink); outline-offset:3px; border-radius:6px}
+
+  @media (max-width:360px){#numberToggle{margin-left:0}}
+  @media (max-width:760px){
+    .panel{padding:clamp(20px,4vh,36px) 0 30px}
+    .wrap{width:min(calc(100% - 68px),1060px)}
+    .intro,.split{grid-template-columns:1fr}
+    .intro figure{order:-1}
+    .intro img{aspect-ratio:auto; height:min(32svh,280px); max-height:none; border-radius:16px}
+    .rules{grid-template-columns:1fr}
+    #growthCanvas{width:min(100%,360px); width:min(100%,38svh,360px)}
+    #simCanvas{width:min(100%,340px); width:min(100%,35svh,340px)}
+    #sim .lede{display:none}
+    #sim .field{margin-top:14px}
+    #sim .play{margin-top:14px}
+    #sim .status{min-height:1.6em}
+    .lede{font-size:.98rem}
+    .note{font-size:.9rem}
+    .status{font-size:.78rem}
+    .dots{
+      right:2px; left:auto; top:50%; bottom:auto; transform:translateY(-50%);
+      flex-direction:column; gap:2px; padding:0; background:none;
+      box-shadow:none; backdrop-filter:none;
+    }
+    .dots a{width:28px; height:28px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{transition:none!important; animation:none!important}
+  }
+</style>
+</head>
+<body>
+<nav class="dots" aria-label="Sections">
+  <a href="#intro" aria-label="Introduction" aria-current="true"></a>
+  <a href="#rules" aria-label="The rules" aria-current="false"></a>
+  <a href="#growth" aria-label="Growth" aria-current="false"></a>
+  <a href="#sim" aria-label="Live simulation" aria-current="false"></a>
+  <a href="#landscape" aria-label="Relative packing score by angle" aria-current="false"></a>
+</nav>
+
+<main>
+  <section class="panel" id="intro">
+    <div class="wrap intro">
+      <div>
+        <p class="kicker">Phyllotaxis</p>
+        <h1>Why do dahlias grow in spirals?</h1>
+        <p class="lede">A dahlia follows two rules. Together they optimize packing density and trace Fibonacci spirals.</p>
+        <p class="hint">Scroll down or swipe up</p>
+      </div>
+      <figure>
+        <img src="dahlia-intro.jpg" width="1050" height="1400" alt="Close-up of a yellow dahlia with tightly packed seeds forming spiral rows">
+      </figure>
+    </div>
+  </section>
+
+  <section class="panel" id="rules">
+    <div class="wrap">
+      <p class="kicker">The rules</p>
+      <h2>Seed placement follows two repeated rules.</h2>
+      <div class="rules">
+        <article class="card">
+          <span class="num">01</span>
+          <h3>Turn</h3>
+          <p>Each new seed turns <strong>≈137.508°</strong> from the previous one.</p>
+          <span class="formula">Golden angle</span>
+        </article>
+        <article class="card">
+          <span class="num">02</span>
+          <h3>Move outward</h3>
+          <p>Distance grows with the square root of the seed number: equal-area rings hold equal seed counts.</p>
+          <span class="formula">r = c√n</span>
+        </article>
+      </div>
+      <p class="note">≈137.508° is an irrational fraction of a turn, so it never repeats the same ray exactly. Fractions like 120° (1/3) or 90° (1/4) revisit a few rays, creating rows and gaps; the golden angle distributes successive seeds more evenly around the center.</p>
+      <p class="note bio"><strong>In the plant.</strong> Auxin collects where the next seed will form, while existing primordia (future seeds) suppress it nearby. The model captures the resulting geometry, not the physiology.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="growth">
+    <div class="wrap">
+      <p class="kicker">Growth</p>
+      <h2>The spirals emerge as seeds fill.</h2>
+      <p class="lede">No spiral is drawn directly. Repeat the two rules one seed at a time, and neighboring seeds line up into visible clockwise and counterclockwise paths.</p>
+      <div class="split">
+        <div class="canvas-box">
+          <canvas id="growthCanvas" role="img" aria-label="Golden-angle seed pattern with clockwise and counterclockwise spiral paths and numbered seed order; select a count to trace a spiral family"></canvas>
+          <div class="legend" id="growthLegend">
+            <span class="cw"><i></i>CW paths</span>
+            <span class="ccw"><i></i>CCW paths</span>
+          </div>
+        </div>
+        <div>
+          <div class="counts">
+            <button class="count-item ccw" type="button" data-trace="ccw" aria-pressed="false" title="Trace counterclockwise paths"><span>Counterclockwise spiral paths</span><strong id="ccwCount">5</strong></button>
+            <button class="count-item cw" type="button" data-trace="cw" aria-pressed="false" title="Trace clockwise paths"><span>Clockwise spiral paths</span><strong id="cwCount">3</strong></button>
+          </div>
+          <p class="ratio" title="Counterclockwise paths divided by clockwise paths">ratio <span class="sr-only">counterclockwise over clockwise: </span><b id="ratioHigh" class="ccw">5</b> / <b id="ratioLow" class="cw">3</b> = <b id="ratioValue">1.667</b> → φ 1.618</p>
+          <p class="note">Counts are paths, not seeds. Fibonacci ratios approximate φ: 3/5 → 5/8 → 8/13. Tap a count to trace. Numbers mark seed order; outer numbers index paths.</p>
+          <label class="field" for="growthSlider">
+            <span>Seed positions</span><output id="growthValue" for="growthSlider">34</output>
+          </label>
+          <input id="growthSlider" type="range" min="34" max="300" value="34">
+          <div class="chips" role="group" aria-label="Growth controls">
+            <button class="chip" data-seeds="34" aria-pressed="false">34</button>
+            <button class="chip" data-seeds="144" aria-pressed="false">144</button>
+            <button class="chip" data-seeds="300" aria-pressed="false">300</button>
+            <button class="chip toggle" id="ringsToggle" aria-pressed="false" aria-label="Show equal-area rings" title="Show equal-area rings">Rings</button>
+            <button class="chip toggle" id="numberToggle" aria-pressed="true" aria-label="Show seed order numbers" title="Show seed order numbers">Numbers</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="sim">
+    <div class="wrap">
+      <p class="kicker">Live</p>
+      <h2>Now change the angle.</h2>
+      <p class="lede">Away from the golden angle, paths overlap, gaps appear, and the relative packing score falls.</p>
+      <div class="split">
+        <div class="canvas-box">
+          <canvas id="simCanvas" role="img" aria-label="Interactive seed pattern for the selected angle"></canvas>
+          <div class="legend" id="simLegend">
+            <span class="cw"><i></i>CW paths</span>
+            <span class="ccw"><i></i>CCW paths</span>
+          </div>
+          <p class="status" id="simStatus">Distinct families: seeds fill the space evenly.</p>
+        </div>
+        <div>
+          <label class="field" for="angleSlider">
+            <span>Angle</span><output id="angleValue" for="angleSlider">137.507764°</output>
+          </label>
+          <input id="angleSlider" type="range" min="0" max="360" step="any" value="137.50776405003788">
+          <p class="ratio" title="Minimum seed spacing squared relative to the golden angle">Relative packing score <b id="densityValue">100%</b></p>
+          <p class="metric-note">Relative closest-pair clearance; 100% = golden reference. Not total area density.</p>
+          <div class="presets" role="group" aria-label="Angle presets">
+            <button data-angle="137.50776405003788" aria-pressed="true">Golden<small>no small fraction</small></button>
+            <button data-angle="120" aria-pressed="false">120°<small>1/3 turn</small></button>
+            <button data-angle="90" aria-pressed="false">90°<small>1/4 turn</small></button>
+            <button data-angle="180" aria-pressed="false">180°<small>1/2 turn</small></button>
+          </div>
+          <label class="field" for="seedSlider">
+            <span>Seeds</span><output id="seedValue" for="seedSlider">8</output>
+          </label>
+          <input id="seedSlider" type="range" min="1" max="160" value="8">
+          <button class="play" id="playButton" aria-pressed="false">Play growth</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="landscape">
+    <div class="wrap">
+      <p class="kicker">The landscape</p>
+      <h2>Relative packing score by angle.</h2>
+      <p class="lede">Across a settled 500-seed pattern, the golden angle is the clear high point. Simple fractions fall into deep troughs.</p>
+      <div class="curve-box">
+        <canvas id="curveCanvas" role="img" tabindex="0" aria-label="Relative packing score from 0 to 180 degrees. Hover the curve to inspect angle and score. The golden angle at 137.508 degrees is the highest point at 100 percent; simple fractions such as 90, 120, and 180 degrees fall below 5 percent."></canvas>
+        <div class="curve-tooltip" id="curveTooltip" hidden></div>
+      </div>
+      <p class="note curve-note">Relative maximum non-overlap area at 500 seeds; 100% = golden reference. It measures closest-pair clearance, not total occupied area. The mirror pattern repeats from 180° to 360°.</p>
+      <details class="formula-details">
+        <summary>Info / advanced details</summary>
+        <div class="formula-note">
+          <p><strong>Formula used</strong></p>
+          <p class="formula-line"><code>pₙ = c√n (cos(nα), sin(nα))</code></p>
+          <p><code>dmin(α) = min‖pᵢ − pⱼ‖</code> for every seed pair; <code>rseed = dmin / 2</code>; <code>η(α) = Nπrseed² / A</code>; <code>E(α) = 100η(α) / η(αg)</code>.</p>
+          <p><strong>n</strong> = seed index; <strong>c</strong> = scale; <strong>α</strong> = tested angle; <strong>αg</strong> = golden angle; <strong>dmin</strong> = closest seed spacing; <strong>rseed</strong> = largest equal seed radius without pair overlap; <strong>N</strong> = seed count; <strong>A</strong> = fixed region area; <strong>η</strong> = maximum non-overlap area fraction; <strong>E</strong> = relative score versus golden.</p>
+        </div>
+        <p class="curve-reference">Underlying placement has a closed form: <code>rₙ = c√n</code>, <code>θₙ = nα</code>, <code>α = 2π(1 − 1/φ)</code>, with <code>φ = (1 + √5)/2</code>. This finite-500-seed score curve is numerical, not a single closed-form equation. Reference: Vogel, H. (1979), <cite>A better way to construct the sunflower head</cite>, <i>Mathematical Biosciences</i> 44, 179–189. DOI 10.1016/0025-5564(79)90080-4.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<script>
+  const GOLDEN = 360 * (1 - 1 / ((1 + Math.sqrt(5)) / 2));
+  const COLORS = { cw:'#0e7490', ccw:'#a21caf', seed:'#b45309' };
+
+  function fibCounts(n){
+    if(n < 15) return [3,5];
+    if(n < 50) return [5,8];
+    if(n < 150) return [8,13];
+    if(n < 400) return [13,21];
+    if(n < 800) return [21,34];
+    return [34,55];
+  }
+
+  function seedPoints(n, angle, center, scale){
+    const radians = angle * Math.PI / 180;
+    const points = [];
+    for(let i = 1; i <= n; i++){
+      const r = scale * Math.sqrt(i);
+      const t = i * radians;
+      points.push([center + r * Math.cos(t), center + r * Math.sin(t)]);
+    }
+    return points;
+  }
+
+  function minSpacing(points){
+    let best = Infinity;
+    for(let i = 0; i < points.length; i++){
+      for(let j = i + 1; j < points.length; j++){
+        const dx = points[i][0] - points[j][0];
+        const dy = points[i][1] - points[j][1];
+        const distance = dx * dx + dy * dy;
+        if(distance < best) best = distance;
+      }
+    }
+    return Math.sqrt(best);
+  }
+
+  function packingEfficiency(n, angle, center, scale, points){
+    if(n < 8) return null;
+    const current = minSpacing(points);
+    const golden = minSpacing(seedPoints(n, GOLDEN, center, scale));
+    if(!golden) return null;
+    return Math.max(0, Math.min(100, 100 * Math.pow(current / golden, 2)));
+  }
+
+  function draw(canvas, n, angle, options = {}){
+    const size = Math.round(canvas.getBoundingClientRect().width);
+    if(size < 2) return null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const px = Math.round(size * dpr);
+    if(canvas.width !== px || canvas.height !== px){
+      canvas.width = px;
+      canvas.height = px;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,size,size);
+
+    const center = size / 2;
+    const scale = size / (2.3 * Math.sqrt(n));
+    const points = seedPoints(n, angle, center, scale);
+    const pathPoints = seedPoints(n + Math.max(20, Math.ceil(n * .2)), angle, center, scale);
+    const density = options.density ? packingEfficiency(n, angle, center, scale, points) : null;
+
+    if(options.rings){
+      const outer = scale * Math.sqrt(n);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(71,85,105,.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3,5]);
+      for(let k = 1; k <= 4; k++){
+        ctx.beginPath();
+        ctx.arc(center, center, outer * Math.sqrt(k / 4), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    let cw, ccw;
+    if(Math.abs(angle - GOLDEN) < 0.5){
+      [cw, ccw] = fibCounts(n);
+    } else {
+      cw = ccw = Math.max(1, Math.min(n, Math.round(360 / Math.max(angle, 0.0001))));
+    }
+
+    const trace = options.trace || null;
+    const families = cw === ccw
+      ? [[cw, COLORS.cw, 'both']]
+      : [[cw, COLORS.cw, 'cw'], [ccw, COLORS.ccw, 'ccw']];
+    const isActive = family => !trace || trace === family || family === 'both';
+    const arms = [];
+    const ordered = trace
+      ? [...families].sort((a, b) => Number(isActive(a[2])) - Number(isActive(b[2])))
+      : families;
+    ctx.setLineDash([1, Math.max(3.5, size / 85)]);
+    ctx.lineCap = 'round';
+    for(const [step, color, family] of ordered){
+      const active = isActive(family);
+      ctx.globalAlpha = active ? .9 : .12;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = active && trace ? Math.max(2.2, size / 150) : Math.max(1.8, size / 190);
+      for(let s = 0; s < step; s++){
+        let last = -1;
+        ctx.beginPath();
+        for(let i = s; i < pathPoints.length; i += step){
+          if(last < 0) ctx.moveTo(pathPoints[i][0], pathPoints[i][1]);
+          else ctx.lineTo(pathPoints[i][0], pathPoints[i][1]);
+          last = i;
+        }
+        ctx.stroke();
+        const lastSeed = s + Math.floor((points.length - 1 - s) / step) * step;
+        if(lastSeed >= s) arms.push({ color, family, index: s + 1, point: points[lastSeed], count: Math.floor((lastSeed - s) / step) + 1 });
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = trace ? .4 : 1;
+
+    const dot = Math.max(1.9, size / 105);
+    ctx.fillStyle = COLORS.seed;
+    for(const [x, y] of points){
+      ctx.beginPath();
+      ctx.arc(x, y, dot, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if(options.labels){
+      ctx.globalAlpha = trace ? .55 : 1;
+      const stride = Math.max(1, Math.ceil(n / 20));
+      const fontSize = Math.max(8.5, size / 34);
+      ctx.font = `700 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = Math.max(2, fontSize / 3);
+      ctx.strokeStyle = '#fff';
+      ctx.fillStyle = '#0f172a';
+      for(let i = 0; i < points.length; i++){
+        const seed = i + 1;
+        if(seed !== 1 && seed !== n && (seed - 1) % stride !== 0) continue;
+        const [x, y] = points[i];
+        const labelY = y > center ? y - dot - fontSize * 0.8 : y + dot + fontSize * 0.8;
+        ctx.strokeText(seed, x, labelY);
+        ctx.fillText(seed, x, labelY);
+      }
+
+      const armSize = Math.max(8, size / 45);
+      ctx.font = `800 ${armSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      ctx.lineWidth = 2.5;
+      for(const arm of arms){
+        if(arm.count < 2) continue;
+        ctx.globalAlpha = isActive(arm.family) ? 1 : .18;
+        const [x, y] = arm.point;
+        const dx = x - center;
+        const dy = y - center;
+        const length = Math.hypot(dx, dy) || 1;
+        const offset = dot + armSize * 1.15;
+        const labelX = Math.min(size - armSize, Math.max(armSize, x + dx / length * offset));
+        const labelY = Math.min(size - armSize, Math.max(armSize, y + dy / length * offset));
+        ctx.strokeStyle = '#fff';
+        ctx.fillStyle = arm.color;
+        ctx.strokeText(arm.index, labelX, labelY);
+        ctx.fillText(arm.index, labelX, labelY);
+      }
+    }
+    ctx.globalAlpha = 1;
+    return { cw, ccw, density };
+  }
+
+  const CURVE_N = 500;
+  const curve = {
+    canvas: document.getElementById('curveCanvas'),
+    section: document.getElementById('landscape'),
+    tooltip: document.getElementById('curveTooltip'),
+    data: null,
+    hover: null
+  };
+
+  function buildCurveData(){
+    const angles = [];
+    for(let a = 0; a <= 180.0001; a += 0.5) angles.push(a);
+    for(let a = 136.5; a <= 138.5001; a += 0.05) angles.push(a);
+    angles.push(GOLDEN);
+    angles.sort((a, b) => a - b);
+
+    const goldenSpacing = minSpacing(seedPoints(CURVE_N, GOLDEN, 0, 1));
+    const data = [];
+    let previous = -1;
+    for(const a of angles){
+      if(a - previous < 0.001) continue;
+      previous = a;
+      const spacing = minSpacing(seedPoints(CURVE_N, a, 0, 1));
+      const value = Math.max(0, Math.min(100, 100 * Math.pow(spacing / goldenSpacing, 2)));
+      data.push({ angle: a, value });
+    }
+    return data;
+  }
+
+  function curveLayout(width, height){
+    const pad = { left: 48, right: 14, top: 22, bottom: 28 };
+    const x0 = pad.left;
+    const x1 = width - pad.right;
+    const y0 = height - pad.bottom;
+    const y1 = pad.top;
+    return {
+      x0, x1, y0, y1,
+      x: angle => x0 + (angle / 180) * (x1 - x0),
+      y: value => y0 - (value / 100) * (y0 - y1)
+    };
+  }
+
+  function drawCurve(){
+    if(!curve.data) return;
+    const canvas = curve.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    if(width < 2 || height < 2) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const px = Math.round(width * dpr);
+    const py = Math.round(height * dpr);
+    if(canvas.width !== px || canvas.height !== py){
+      canvas.width = px;
+      canvas.height = py;
+    }
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const { x0, x1, y0, y1, x, y } = curveLayout(width, height);
+    const fontSize = Math.max(9, Math.min(12, width / 52));
+
+    ctx.font = `700 ${fontSize}px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for(let v = 0; v <= 100; v += 25){
+      const gy = y(v);
+      ctx.beginPath();
+      ctx.moveTo(x0, gy);
+      ctx.lineTo(x1, gy);
+      ctx.stroke();
+      ctx.fillText(v + '%', x0 - 7, gy);
+    }
+
+    ctx.textBaseline = 'top';
+    for(let a = 0; a <= 180; a += 30){
+      const gx = x(a);
+      ctx.beginPath();
+      ctx.moveTo(gx, y0);
+      ctx.lineTo(gx, y0 + 4);
+      ctx.stroke();
+      ctx.textAlign = a === 0 ? 'left' : a === 180 ? 'right' : 'center';
+      ctx.fillText(a + '°', gx, y0 + 7);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x(0), y0);
+    for(const point of curve.data) ctx.lineTo(x(point.angle), y(point.value));
+    ctx.lineTo(x(180), y0);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(180, 83, 9, .10)';
+    ctx.fill();
+
+    ctx.beginPath();
+    for(let i = 0; i < curve.data.length; i++){
+      const point = curve.data[i];
+      const px = x(point.angle);
+      const py = y(point.value);
+      if(i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = Math.max(1.8, width / 360);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    if(curve.hover){
+      const hx = x(curve.hover.angle);
+      const hy = y(curve.hover.value);
+      ctx.save();
+      ctx.setLineDash([2, 3]);
+      ctx.strokeStyle = 'rgba(14, 116, 144, .72)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(hx, y1);
+      ctx.lineTo(hx, y0);
+      ctx.moveTo(x0, hy);
+      ctx.lineTo(x1, hy);
+      ctx.stroke();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#0e7490';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    const gx = x(GOLDEN);
+    const gy = y(100);
+    ctx.save();
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = 'rgba(180, 83, 9, .55)';
+    ctx.beginPath();
+    ctx.moveTo(gx, y0);
+    ctx.lineTo(gx, gy);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(gx, gy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#b45309';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#b45309';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('golden', gx - 7, gy - 5);
+  }
+
+  function nearestCurvePoint(angle){
+    let closest = curve.data[0];
+    let distance = Infinity;
+    for(const point of curve.data){
+      const nextDistance = Math.abs(point.angle - angle);
+      if(nextDistance >= distance) continue;
+      closest = point;
+      distance = nextDistance;
+    }
+    return closest;
+  }
+
+  function hideCurveTooltip(){
+    curve.hover = null;
+    curve.tooltip.hidden = true;
+    drawCurve();
+  }
+
+  function updateCurveHover(event){
+    if(!curve.data) ensureCurve();
+    const rect = curve.canvas.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    const { x0, x1, x, y } = curveLayout(width, height);
+    const pointerX = event.clientX - rect.left;
+    const pointerY = event.clientY - rect.top;
+    if(pointerX < x0 || pointerX > x1 || pointerY < 0 || pointerY > height){
+      hideCurveTooltip();
+      return;
+    }
+
+    const angle = Math.max(0, Math.min(180, ((pointerX - x0) / (x1 - x0)) * 180));
+    curve.hover = nearestCurvePoint(angle);
+    const pointX = x(curve.hover.angle);
+    const pointY = y(curve.hover.value);
+    const tooltipY = pointY < 48 ? pointY + 12 : pointY - 8;
+    curve.tooltip.textContent = `${curve.hover.angle.toFixed(2)}° · ${curve.hover.value.toFixed(1)}%`;
+    curve.tooltip.style.left = `${curve.canvas.offsetLeft + pointX}px`;
+    curve.tooltip.style.top = `${curve.canvas.offsetTop + tooltipY}px`;
+    curve.tooltip.style.transform = pointY < 48 ? 'translate(-50%, 0)' : 'translate(-50%, -100%)';
+    curve.tooltip.hidden = false;
+    drawCurve();
+  }
+
+  curve.canvas.addEventListener('pointermove', updateCurveHover);
+  curve.canvas.addEventListener('pointerleave', hideCurveTooltip);
+  curve.canvas.addEventListener('blur', hideCurveTooltip);
+
+  function ensureCurve(){
+    if(!curve.data) curve.data = buildCurveData();
+    drawCurve();
+  }
+
+  const growth = {
+    canvas: document.getElementById('growthCanvas'),
+    slider: document.getElementById('growthSlider'),
+    value: document.getElementById('growthValue'),
+    cw: document.getElementById('cwCount'),
+    ccw: document.getElementById('ccwCount'),
+    ratio: document.getElementById('ratioValue'),
+    ratioHigh: document.getElementById('ratioHigh'),
+    ratioLow: document.getElementById('ratioLow'),
+    chips: Array.from(document.querySelectorAll('.chip[data-seeds]'))
+  };
+  let growthN = 34;
+  let showNumbers = true;
+  let showRings = false;
+  let traced = null;
+  let pinnedTrace = null;
+  const numberToggle = document.getElementById('numberToggle');
+  const ringsToggle = document.getElementById('ringsToggle');
+  const traceButtons = Array.from(document.querySelectorAll('[data-trace]'));
+
+  function renderGrowth(){
+    const result = draw(growth.canvas, growthN, GOLDEN, {
+      labels: showNumbers,
+      rings: showRings,
+      trace: traced
+    });
+    growth.value.textContent = growthN;
+    if(growth.slider.value !== String(growthN)) growth.slider.value = growthN;
+    if(result){
+      const high = Math.max(result.cw, result.ccw);
+      const low = Math.min(result.cw, result.ccw);
+      growth.cw.textContent = result.cw;
+      growth.ccw.textContent = result.ccw;
+      growth.ratioHigh.textContent = high;
+      growth.ratioHigh.className = result.ccw >= result.cw ? 'ccw' : 'cw';
+      growth.ratioLow.textContent = low;
+      growth.ratioLow.className = result.ccw >= result.cw ? 'cw' : 'ccw';
+      growth.ratio.textContent = (high / low).toFixed(3);
+    }
+    for(const chip of growth.chips){
+      chip.setAttribute('aria-pressed', String(Number(chip.dataset.seeds) === growthN));
+    }
+  }
+  growth.slider.addEventListener('input', event => {
+    growthN = Number(event.target.value);
+    renderGrowth();
+  });
+  for(const chip of growth.chips){
+    chip.addEventListener('click', () => {
+      growthN = Number(chip.dataset.seeds);
+      renderGrowth();
+    });
+  }
+  numberToggle.addEventListener('click', () => {
+    showNumbers = !showNumbers;
+    numberToggle.setAttribute('aria-pressed', String(showNumbers));
+    renderGrowth();
+  });
+  ringsToggle.addEventListener('click', () => {
+    showRings = !showRings;
+    ringsToggle.setAttribute('aria-pressed', String(showRings));
+    renderGrowth();
+  });
+  function setTrace(value){
+    if(traced !== value){
+      traced = value;
+      renderGrowth();
+    }
+    for(const button of traceButtons){
+      button.setAttribute('aria-pressed', String(button.dataset.trace === pinnedTrace));
+    }
+  }
+  for(const button of traceButtons){
+    const family = button.dataset.trace;
+    button.addEventListener('pointerenter', () => setTrace(family));
+    button.addEventListener('pointerleave', () => setTrace(pinnedTrace));
+    button.addEventListener('focus', () => setTrace(family));
+    button.addEventListener('blur', () => setTrace(pinnedTrace));
+    button.addEventListener('click', () => {
+      pinnedTrace = pinnedTrace === family ? null : family;
+      setTrace(pinnedTrace);
+    });
+  }
+
+  const sim = {
+    section: document.getElementById('sim'),
+    canvas: document.getElementById('simCanvas'),
+    angleSlider: document.getElementById('angleSlider'),
+    angleValue: document.getElementById('angleValue'),
+    seedSlider: document.getElementById('seedSlider'),
+    seedValue: document.getElementById('seedValue'),
+    density: document.getElementById('densityValue'),
+    status: document.getElementById('simStatus'),
+    legend: document.getElementById('simLegend'),
+    presets: Array.from(document.querySelectorAll('[data-angle]')),
+    play: document.getElementById('playButton')
+  };
+  const seedMax = Number(sim.seedSlider.max);
+  let angle = GOLDEN;
+  let seeds = 8;
+  let playing = false;
+  let frame = 0;
+  let lastPaint = 0;
+
+  function renderSim(){
+    const result = draw(sim.canvas, seeds, angle, { density:true });
+    sim.angleValue.textContent = (Math.abs(angle - GOLDEN) < 1e-9 ? GOLDEN.toFixed(6) : angle.toFixed(3)) + '°';
+    sim.seedValue.textContent = seeds;
+    sim.density.textContent = result && result.density != null ? Math.round(result.density) + '%' : '—';
+    if(sim.angleSlider.value !== String(angle)) sim.angleSlider.value = angle;
+    if(sim.seedSlider.value !== String(seeds)) sim.seedSlider.value = seeds;
+    for(const preset of sim.presets){
+      preset.setAttribute('aria-pressed', String(Math.abs(Number(preset.dataset.angle) - angle) < 0.0005));
+    }
+    if(result){
+      const overlap = result.cw === result.ccw;
+      sim.legend.classList.toggle('is-overlap', overlap);
+      sim.status.textContent = overlap
+        ? 'Overlapping paths: both families land on the same lines.'
+        : 'Distinct families: seeds fill the space evenly.';
+    }
+  }
+  sim.angleSlider.addEventListener('input', event => {
+    angle = Number(event.target.value);
+    renderSim();
+  });
+  sim.seedSlider.addEventListener('input', event => {
+    seeds = Number(event.target.value);
+    renderSim();
+  });
+  for(const preset of sim.presets){
+    preset.addEventListener('click', () => {
+      angle = Number(preset.dataset.angle);
+      sim.angleSlider.value = angle;
+      renderSim();
+    });
+  }
+
+  function stopPlay(){
+    playing = false;
+    cancelAnimationFrame(frame);
+    sim.play.textContent = 'Play growth';
+    sim.play.setAttribute('aria-pressed', 'false');
+  }
+  function tick(time){
+    if(!playing) return;
+    if(time - lastPaint >= 60){
+      lastPaint = time;
+      seeds = seeds >= seedMax ? 1 : seeds + 1;
+      renderSim();
+    }
+    frame = requestAnimationFrame(tick);
+  }
+  sim.play.addEventListener('click', () => {
+    if(playing){ stopPlay(); return; }
+    if(seeds >= seedMax){
+      seeds = 1;
+      renderSim();
+    }
+    playing = true;
+    sim.play.textContent = 'Pause';
+    sim.play.setAttribute('aria-pressed', 'true');
+    lastPaint = 0;
+    frame = requestAnimationFrame(tick);
+  });
+
+  const panels = Array.from(document.querySelectorAll('main .panel'));
+  const dots = Array.from(document.querySelectorAll('.dots a'));
+
+  if('IntersectionObserver' in window){
+    const sectionObserver = new IntersectionObserver(entries => {
+      for(const entry of entries){
+        if(!entry.isIntersecting) continue;
+        const target = '#' + entry.target.id;
+        for(const dot of dots){
+          dot.setAttribute('aria-current', String(dot.getAttribute('href') === target));
+        }
+      }
+    }, { rootMargin:'-45% 0px -45% 0px', threshold:0 });
+    for(const panel of panels) sectionObserver.observe(panel);
+
+    new IntersectionObserver(entries => {
+      for(const entry of entries){
+        if(!entry.isIntersecting && playing) stopPlay();
+      }
+    }, { threshold:0 }).observe(sim.section);
+
+    const curveObserver = new IntersectionObserver(entries => {
+      if(!entries.some(entry => entry.isIntersecting)) return;
+      ensureCurve();
+      curveObserver.disconnect();
+    }, { rootMargin:'200px 0px' });
+    curveObserver.observe(curve.section);
+  }
+
+  if('ResizeObserver' in window){
+    const resizeObserver = new ResizeObserver(entries => {
+      for(const entry of entries){
+        if(entry.target === growth.canvas) renderGrowth();
+        if(entry.target === sim.canvas) renderSim();
+        if(entry.target === curve.canvas) drawCurve();
+      }
+    });
+    resizeObserver.observe(growth.canvas);
+    resizeObserver.observe(sim.canvas);
+    resizeObserver.observe(curve.canvas);
+  } else {
+    window.addEventListener('resize', () => { renderGrowth(); renderSim(); drawCurve(); });
+  }
+
+  renderGrowth();
+  renderSim();
+  if(!('IntersectionObserver' in window)) ensureCurve();
+</script>
+</body>
+</html>
