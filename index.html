@@ -134,6 +134,12 @@
   .formula-note p:last-child{margin-bottom:0}
   .formula-line{font-size:.86rem; color:var(--ink)}
   .formula-note code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--ink)}
+  .packing-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(14px,2vw,24px); margin-top:clamp(20px,3vh,34px)}
+  .packing-card{background:var(--panel); border-radius:18px; padding:14px; box-shadow:0 1px 2px rgba(15,23,42,.04),0 14px 36px -18px rgba(15,23,42,.16)}
+  .packing-card canvas{width:100%; aspect-ratio:1; border-radius:12px; background:#fff}
+  .packing-card h3{margin:12px 2px 5px}
+  .packing-card p{margin:0 2px; color:var(--muted); line-height:1.45; font-size:.9rem}
+  .takeaway{margin:clamp(20px,3vh,34px) auto 0; max-width:68ch; padding:16px 18px; border-left:3px solid var(--amber); background:#fff; color:var(--muted); line-height:1.55}
 
   .counts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px}
   .count-item{
@@ -227,6 +233,7 @@
     .intro figure{order:-1}
     .intro img{aspect-ratio:auto; height:min(32svh,280px); max-height:none; border-radius:16px}
     .rules{grid-template-columns:1fr}
+    .packing-grid{grid-template-columns:1fr}
     #growthCanvas{width:min(100%,360px); width:min(100%,38svh,360px)}
     #simCanvas{width:min(100%,340px); width:min(100%,35svh,340px)}
     #sim .lede{display:none}
@@ -253,6 +260,7 @@
 <nav class="dots" aria-label="Sections">
   <a href="#intro" aria-label="Introduction" aria-current="true"></a>
   <a href="#rules" aria-label="The rules" aria-current="false"></a>
+  <a href="#packing" aria-label="Packing comparison" aria-current="false"></a>
   <a href="#growth" aria-label="Growth" aria-current="false"></a>
   <a href="#sim" aria-label="Live simulation" aria-current="false"></a>
   <a href="#landscape" aria-label="Relative packing score by angle" aria-current="false"></a>
@@ -264,7 +272,7 @@
       <div>
         <p class="kicker">Phyllotaxis</p>
         <h1>Why do dahlias grow in spirals?</h1>
-        <p class="lede">A dahlia follows two rules. Together they optimize packing density and trace Fibonacci spirals.</p>
+        <p class="lede">A dahlia adds one new flower at a time. A simple turning rule helps each new flower find open space, and nearby flowers line up into spirals.</p>
         <p class="hint">Scroll down or swipe up</p>
       </div>
       <figure>
@@ -291,8 +299,34 @@
           <span class="formula">r = c√n</span>
         </article>
       </div>
-      <p class="note">≈137.508° is an irrational fraction of a turn, so it never repeats the same ray exactly. Fractions like 120° (1/3) or 90° (1/4) revisit a few rays, creating rows and gaps; the golden angle distributes successive seeds more evenly around the center.</p>
-      <p class="note bio"><strong>In the plant.</strong> Auxin collects where the next seed will form, while existing primordia (future seeds) suppress it nearby. The model captures the resulting geometry, not the physiology.</p>
+      <p class="note">Think of 137.508° as a little less than two-fifths of a full turn. Because it does not repeat a simple fraction of a turn, new flowers avoid returning to the same few directions. Angles like 120° or 90° create obvious rows and gaps.</p>
+      <p class="note bio"><strong>In the plant.</strong> Growth signals encourage a new flower where there is room, while nearby young flowers discourage crowding. The plant is not calculating an angle; this model describes the geometry that can emerge.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="packing">
+    <div class="wrap">
+      <p class="kicker">A useful comparison</p>
+      <h2>Not all good packing looks the same.</h2>
+      <p class="lede">If all points existed at once on a flat surface, hexagonal packing would fit equal circles most tightly. A dahlia has a different job: it adds flowers one at a time around a growing center.</p>
+      <div class="packing-grid">
+        <article class="packing-card">
+          <canvas id="squareCanvas" role="img" aria-label="Square packing with points arranged in straight rows"></canvas>
+          <h3>Square packing</h3>
+          <p>Simple rows and columns. Four nearest neighbors, with more unused space.</p>
+        </article>
+        <article class="packing-card">
+          <canvas id="hexCanvas" role="img" aria-label="Hexagonal packing with offset rows and six neighbors"></canvas>
+          <h3>Hexagonal packing</h3>
+          <p>Offset rows. Six nearest neighbors. Densest equal-circle packing on a flat plane.</p>
+        </article>
+        <article class="packing-card">
+          <canvas id="spiralCanvas" role="img" aria-label="Golden-angle spiral packing growing outward from a center"></canvas>
+          <h3>Dahlia-style growth</h3>
+          <p>No fixed grid. Each new point turns and moves outward, so spiral paths appear.</p>
+        </article>
+      </div>
+      <p class="takeaway"><strong>Important difference.</strong> The golden angle is not denser than hexagonal packing. It is useful because a plant grows from the center outward instead of placing every flower at once.</p>
     </div>
   </section>
 
@@ -300,7 +334,7 @@
     <div class="wrap">
       <p class="kicker">Growth</p>
       <h2>The spirals emerge as seeds fill.</h2>
-      <p class="lede">No spiral is drawn directly. Repeat the two rules one seed at a time, and neighboring seeds line up into visible clockwise and counterclockwise paths.</p>
+      <p class="lede">No spiral is drawn directly. Repeat the two rules one flower at a time, and neighboring points line up into visible clockwise and counterclockwise paths.</p>
       <div class="split">
         <div class="canvas-box">
           <canvas id="growthCanvas" role="img" aria-label="Golden-angle seed pattern with clockwise and counterclockwise spiral paths and numbered seed order; select a count to trace a spiral family"></canvas>
@@ -336,7 +370,7 @@
     <div class="wrap">
       <p class="kicker">Live</p>
       <h2>Now change the angle.</h2>
-      <p class="lede">Away from the golden angle, paths overlap, gaps appear, and the relative packing score falls.</p>
+      <p class="lede">Move away from the golden angle and repeated rows or gaps appear. The score below measures closest-neighbor spacing in this model, not total area density.</p>
       <div class="split">
         <div class="canvas-box">
           <canvas id="simCanvas" role="img" aria-label="Interactive seed pattern for the selected angle"></canvas>
@@ -351,8 +385,8 @@
             <span>Angle</span><output id="angleValue" for="angleSlider">137.507764°</output>
           </label>
           <input id="angleSlider" type="range" min="0" max="360" step="any" value="137.50776405003788">
-          <p class="ratio" title="Minimum seed spacing squared relative to the golden angle">Relative packing score <b id="densityValue">100%</b></p>
-          <p class="metric-note">Relative closest-pair clearance; 100% = golden reference. Not total area density.</p>
+          <p class="ratio" title="Minimum seed spacing squared relative to the golden angle">Space-use score <b id="densityValue">100%</b></p>
+          <p class="metric-note">Closest-point spacing; 100% = golden-angle reference. This is not a global packing-density contest.</p>
           <div class="presets" role="group" aria-label="Angle presets">
             <button data-angle="137.50776405003788" aria-pressed="true">Golden<small>no small fraction</small></button>
             <button data-angle="120" aria-pressed="false">120°<small>1/3 turn</small></button>
@@ -372,10 +406,10 @@
   <section class="panel" id="landscape">
     <div class="wrap">
       <p class="kicker">The landscape</p>
-      <h2>Relative packing score by angle.</h2>
-      <p class="lede">Across a settled 500-seed pattern, the golden angle is the clear high point. Simple fractions fall into deep troughs.</p>
+      <h2>Space-use score by angle.</h2>
+      <p class="lede">For this center-outward model, the golden angle keeps nearby points farther apart than simple repeating angles. Simple fractions fall into deep troughs.</p>
       <div class="curve-box">
-        <canvas id="curveCanvas" role="img" tabindex="0" aria-label="Relative packing score from 0 to 180 degrees. Hover the curve to inspect angle and score. The golden angle at 137.508 degrees is the highest point at 100 percent; simple fractions such as 90, 120, and 180 degrees fall below 5 percent."></canvas>
+        <canvas id="curveCanvas" role="img" tabindex="0" aria-label="Space-use score from 0 to 180 degrees. Hover the curve to inspect angle and score. The golden angle at 137.508 degrees is the highest point at 100 percent; simple fractions such as 90, 120, and 180 degrees fall below 5 percent."></canvas>
         <div class="curve-tooltip" id="curveTooltip" hidden></div>
       </div>
       <p class="note curve-note">Relative maximum non-overlap area at 500 seeds; 100% = golden reference. It measures closest-pair clearance, not total occupied area. The mirror pattern repeats from 180° to 360°.</p>
@@ -558,6 +592,48 @@
     }
     ctx.globalAlpha = 1;
     return { cw, ccw, density };
+  }
+
+  function drawPackingCanvas(canvas, mode){
+    const size = Math.round(canvas.getBoundingClientRect().width);
+    if(size < 2) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const px = Math.round(size * dpr);
+    if(canvas.width !== px || canvas.height !== px){
+      canvas.width = px;
+      canvas.height = px;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+    if(mode === 'spiral'){
+      draw(canvas, 55, GOLDEN, { labels:false });
+      return;
+    }
+    const points = [];
+    const step = size / 7.2;
+    const start = size / 2 - step * 2.5;
+    for(let row = 0; row < 6; row++){
+      for(let col = 0; col < 6; col++){
+        const offset = mode === 'hex' && row % 2 ? step / 2 : 0;
+        points.push([start + col * step + offset, start + row * step * (mode === 'hex' ? .86 : 1)]);
+      }
+    }
+    ctx.fillStyle = COLORS.seed;
+    for(const [x, y] of points){
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(3, size / 27), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  const packingCanvases = [
+    [document.getElementById('squareCanvas'), 'square'],
+    [document.getElementById('hexCanvas'), 'hex'],
+    [document.getElementById('spiralCanvas'), 'spiral']
+  ];
+  function renderPacking(){
+    for(const [canvas, mode] of packingCanvases) drawPackingCanvas(canvas, mode);
   }
 
   const CURVE_N = 500;
@@ -975,17 +1051,22 @@
         if(entry.target === growth.canvas) renderGrowth();
         if(entry.target === sim.canvas) renderSim();
         if(entry.target === curve.canvas) drawCurve();
+        for(const [canvas] of packingCanvases){
+          if(entry.target === canvas) drawPackingCanvas(canvas, packingCanvases.find(item => item[0] === canvas)[1]);
+        }
       }
     });
     resizeObserver.observe(growth.canvas);
     resizeObserver.observe(sim.canvas);
     resizeObserver.observe(curve.canvas);
+    for(const [canvas] of packingCanvases) resizeObserver.observe(canvas);
   } else {
-    window.addEventListener('resize', () => { renderGrowth(); renderSim(); drawCurve(); });
+    window.addEventListener('resize', () => { renderGrowth(); renderSim(); drawCurve(); renderPacking(); });
   }
 
   renderGrowth();
   renderSim();
+  renderPacking();
   if(!('IntersectionObserver' in window)) ensureCurve();
 </script>
 </body>
