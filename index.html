@@ -54,6 +54,8 @@
     margin-top:26px; font-size:.78rem; font-weight:700; letter-spacing:.1em;
     text-transform:uppercase; color:var(--soft);
   }
+  .jump{display:inline-block; margin-top:18px; padding:.7rem 1rem; border-radius:12px; background:var(--ink); color:#fff; text-decoration:none; font-weight:700; font-size:.9rem}
+  .jump:hover{background:#1e293b}
 
   .intro{
     display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
@@ -140,6 +142,12 @@
   .packing-card h3{margin:12px 2px 5px}
   .packing-card p{margin:0 2px; color:var(--muted); line-height:1.45; font-size:.9rem}
   .takeaway{margin:clamp(20px,3vh,34px) auto 0; max-width:68ch; padding:16px 18px; border-left:3px solid var(--amber); background:#fff; color:var(--muted); line-height:1.55}
+  .floret-grid{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:clamp(20px,4vw,60px); align-items:center; margin-top:clamp(20px,3vh,34px)}
+  .floret-visual{display:block; width:100%; min-height:260px; aspect-ratio:1.5; border-radius:20px; object-fit:cover; object-position:center; box-shadow:0 20px 45px -25px rgba(15,23,42,.4); overflow:hidden}
+  .floret-facts{display:grid; gap:12px}
+  .floret-fact{padding:16px 18px; border-radius:14px; background:var(--panel)}
+  .floret-fact strong{display:block; margin-bottom:4px}
+  .floret-fact p{color:var(--muted); line-height:1.5; font-size:.94rem}
 
   .counts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px}
   .count-item{
@@ -233,6 +241,8 @@
     .intro figure{order:-1}
     .intro img{aspect-ratio:auto; height:min(32svh,280px); max-height:none; border-radius:16px}
     .rules{grid-template-columns:1fr}
+    .floret-grid{grid-template-columns:1fr}
+    .floret-visual{min-height:220px}
     .packing-grid{grid-template-columns:1fr}
     #growthCanvas{width:min(100%,360px); width:min(100%,38svh,360px)}
     #simCanvas{width:min(100%,340px); width:min(100%,35svh,340px)}
@@ -259,6 +269,7 @@
 <body>
 <nav class="dots" aria-label="Sections">
   <a href="#intro" aria-label="Introduction" aria-current="true"></a>
+  <a href="#florets" aria-label="What is a floret" aria-current="false"></a>
   <a href="#rules" aria-label="The rules" aria-current="false"></a>
   <a href="#packing" aria-label="Packing comparison" aria-current="false"></a>
   <a href="#growth" aria-label="Growth" aria-current="false"></a>
@@ -272,12 +283,37 @@
       <div>
         <p class="kicker">Phyllotaxis</p>
         <h1>Why do dahlias grow in spirals?</h1>
-        <p class="lede">A dahlia adds one new flower at a time. A simple turning rule helps each new flower find open space, and nearby flowers line up into spirals.</p>
+        <p class="lede">A dahlia head is made of hundreds of tiny flowers called florets. A simple turning rule helps each new floret find open space, and nearby florets line up into spirals.</p>
+        <a class="jump" href="#growth">Watch florets grow</a>
         <p class="hint">Scroll down or swipe up</p>
       </div>
       <figure>
-        <img src="dahlia-intro.jpg" width="1050" height="1400" alt="Close-up of a yellow dahlia with tightly packed seeds forming spiral rows">
+        <img src="dahlia-intro.jpg" width="1050" height="1400" alt="Close-up of a yellow dahlia head made of tightly packed florets forming spiral rows">
       </figure>
+    </div>
+  </section>
+
+  <section class="panel" id="florets">
+    <div class="wrap">
+      <p class="kicker">Start with the flower</p>
+      <h2>A dahlia is a crowd of tiny flowers.</h2>
+      <div class="floret-grid">
+        <img class="floret-visual" src="dahlia-intro.jpg" width="1050" height="1400" alt="Close-up of individual dahlia florets packed around a seed center">
+        <div class="floret-facts">
+          <article class="floret-fact">
+            <strong>Floret = one tiny flower</strong>
+            <p>The large dahlia head is a flower cluster. Each small visible unit is an individual floret, packed beside its neighbors.</p>
+          </article>
+          <article class="floret-fact">
+            <strong>What the model shows</strong>
+            <p>Each dot in this page represents a new floret position. It is not drawing a separate spiral on the plant.</p>
+          </article>
+          <article class="floret-fact">
+            <strong>Floret versus seed</strong>
+            <p>A floret may produce a seed, but the spiral pattern forms while florets are being arranged. “Floret” is the more accurate word here.</p>
+          </article>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -289,18 +325,18 @@
         <article class="card">
           <span class="num">01</span>
           <h3>Turn</h3>
-          <p>Each new seed turns <strong>≈137.508°</strong> from the previous one.</p>
+          <p>Each new floret turns <strong>≈137.508°</strong> from the previous one.</p>
           <span class="formula">Golden angle</span>
         </article>
         <article class="card">
           <span class="num">02</span>
           <h3>Move outward</h3>
-          <p>Distance grows with the square root of the seed number: equal-area rings hold equal seed counts.</p>
+          <p>Distance grows with the square root of the floret number: equal-area rings hold equal floret counts.</p>
           <span class="formula">r = c√n</span>
         </article>
       </div>
-      <p class="note">Think of 137.508° as a little less than two-fifths of a full turn. Because it does not repeat a simple fraction of a turn, new flowers avoid returning to the same few directions. Angles like 120° or 90° create obvious rows and gaps.</p>
-      <p class="note bio"><strong>In the plant.</strong> Growth signals encourage a new flower where there is room, while nearby young flowers discourage crowding. The plant is not calculating an angle; this model describes the geometry that can emerge.</p>
+      <p class="note">Think of 137.508° as a little less than two-fifths of a full turn. Because it does not repeat a simple fraction of a turn, new florets avoid returning to the same few directions. Angles like 120° or 90° create obvious rows and gaps.</p>
+      <p class="note bio"><strong>In the plant.</strong> Growth signals encourage a new floret where there is room, while nearby young florets discourage crowding. The plant is not calculating an angle; this model describes the geometry that can emerge.</p>
     </div>
   </section>
 
@@ -308,7 +344,7 @@
     <div class="wrap">
       <p class="kicker">A useful comparison</p>
       <h2>Not all good packing looks the same.</h2>
-      <p class="lede">If all points existed at once on a flat surface, hexagonal packing would fit equal circles most tightly. A dahlia has a different job: it adds flowers one at a time around a growing center.</p>
+      <p class="lede">If all points existed at once on a flat surface, hexagonal packing would fit equal circles most tightly. A dahlia has a different job: it adds florets one at a time around a growing center.</p>
       <div class="packing-grid">
         <article class="packing-card">
           <canvas id="squareCanvas" role="img" aria-label="Square packing with points arranged in straight rows"></canvas>
@@ -326,18 +362,18 @@
           <p>No fixed grid. Each new point turns and moves outward, so spiral paths appear.</p>
         </article>
       </div>
-      <p class="takeaway"><strong>Important difference.</strong> The golden angle is not denser than hexagonal packing. It is useful because a plant grows from the center outward instead of placing every flower at once.</p>
+      <p class="takeaway"><strong>Important difference.</strong> The golden angle is not denser than hexagonal packing. It is useful because a plant grows from the center outward instead of placing every floret at once.</p>
     </div>
   </section>
 
   <section class="panel" id="growth">
     <div class="wrap">
       <p class="kicker">Growth</p>
-      <h2>The spirals emerge as seeds fill.</h2>
-      <p class="lede">No spiral is drawn directly. Repeat the two rules one flower at a time, and neighboring points line up into visible clockwise and counterclockwise paths.</p>
+      <h2>The spirals emerge as florets fill.</h2>
+      <p class="lede">No spiral is drawn directly. Repeat the two rules one floret at a time, and neighboring points line up into visible clockwise and counterclockwise paths.</p>
       <div class="split">
         <div class="canvas-box">
-          <canvas id="growthCanvas" role="img" aria-label="Golden-angle seed pattern with clockwise and counterclockwise spiral paths and numbered seed order; select a count to trace a spiral family"></canvas>
+          <canvas id="growthCanvas" role="img" aria-label="Golden-angle floret pattern with clockwise and counterclockwise spiral paths and numbered floret order; select a count to trace a spiral family"></canvas>
           <div class="legend" id="growthLegend">
             <span class="cw"><i></i>CW paths</span>
             <span class="ccw"><i></i>CCW paths</span>
@@ -349,9 +385,9 @@
             <button class="count-item cw" type="button" data-trace="cw" aria-pressed="false" title="Trace clockwise paths"><span>Clockwise spiral paths</span><strong id="cwCount">3</strong></button>
           </div>
           <p class="ratio" title="Counterclockwise paths divided by clockwise paths">ratio <span class="sr-only">counterclockwise over clockwise: </span><b id="ratioHigh" class="ccw">5</b> / <b id="ratioLow" class="cw">3</b> = <b id="ratioValue">1.667</b> → φ 1.618</p>
-          <p class="note">Counts are paths, not seeds. Fibonacci ratios approximate φ: 3/5 → 5/8 → 8/13. Tap a count to trace. Numbers mark seed order; outer numbers index paths.</p>
+          <p class="note">Counts are paths, not florets. Fibonacci ratios approximate φ: 3/5 → 5/8 → 8/13. Tap a count to trace. Numbers mark floret order; outer numbers index paths.</p>
           <label class="field" for="growthSlider">
-            <span>Seed positions</span><output id="growthValue" for="growthSlider">34</output>
+            <span>Floret positions</span><output id="growthValue" for="growthSlider">34</output>
           </label>
           <input id="growthSlider" type="range" min="34" max="300" value="34">
           <div class="chips" role="group" aria-label="Growth controls">
@@ -359,7 +395,7 @@
             <button class="chip" data-seeds="144" aria-pressed="false">144</button>
             <button class="chip" data-seeds="300" aria-pressed="false">300</button>
             <button class="chip toggle" id="ringsToggle" aria-pressed="false" aria-label="Show equal-area rings" title="Show equal-area rings">Rings</button>
-            <button class="chip toggle" id="numberToggle" aria-pressed="true" aria-label="Show seed order numbers" title="Show seed order numbers">Numbers</button>
+            <button class="chip toggle" id="numberToggle" aria-pressed="true" aria-label="Show floret order numbers" title="Show floret order numbers">Numbers</button>
           </div>
         </div>
       </div>
@@ -373,19 +409,19 @@
       <p class="lede">Move away from the golden angle and repeated rows or gaps appear. The score below measures closest-neighbor spacing in this model, not total area density.</p>
       <div class="split">
         <div class="canvas-box">
-          <canvas id="simCanvas" role="img" aria-label="Interactive seed pattern for the selected angle"></canvas>
+          <canvas id="simCanvas" role="img" aria-label="Interactive floret pattern for the selected angle"></canvas>
           <div class="legend" id="simLegend">
             <span class="cw"><i></i>CW paths</span>
             <span class="ccw"><i></i>CCW paths</span>
           </div>
-          <p class="status" id="simStatus">Distinct families: seeds fill the space evenly.</p>
+          <p class="status" id="simStatus">Distinct families: florets fill the space evenly.</p>
         </div>
         <div>
           <label class="field" for="angleSlider">
             <span>Angle</span><output id="angleValue" for="angleSlider">137.507764°</output>
           </label>
           <input id="angleSlider" type="range" min="0" max="360" step="any" value="137.50776405003788">
-          <p class="ratio" title="Minimum seed spacing squared relative to the golden angle">Space-use score <b id="densityValue">100%</b></p>
+          <p class="ratio" title="Minimum floret spacing squared relative to the golden angle">Space-use score <b id="densityValue">100%</b></p>
           <p class="metric-note">Closest-point spacing; 100% = golden-angle reference. This is not a global packing-density contest.</p>
           <div class="presets" role="group" aria-label="Angle presets">
             <button data-angle="137.50776405003788" aria-pressed="true">Golden<small>no small fraction</small></button>
@@ -394,7 +430,7 @@
             <button data-angle="180" aria-pressed="false">180°<small>1/2 turn</small></button>
           </div>
           <label class="field" for="seedSlider">
-            <span>Seeds</span><output id="seedValue" for="seedSlider">8</output>
+            <span>Florets</span><output id="seedValue" for="seedSlider">8</output>
           </label>
           <input id="seedSlider" type="range" min="1" max="160" value="8">
           <button class="play" id="playButton" aria-pressed="false">Play growth</button>
@@ -412,14 +448,14 @@
         <canvas id="curveCanvas" role="img" tabindex="0" aria-label="Space-use score from 0 to 180 degrees. Hover the curve to inspect angle and score. The golden angle at 137.508 degrees is the highest point at 100 percent; simple fractions such as 90, 120, and 180 degrees fall below 5 percent."></canvas>
         <div class="curve-tooltip" id="curveTooltip" hidden></div>
       </div>
-      <p class="note curve-note">Relative maximum non-overlap area at 500 seeds; 100% = golden reference. It measures closest-pair clearance, not total occupied area. The mirror pattern repeats from 180° to 360°.</p>
+      <p class="note curve-note">Relative maximum non-overlap area at 500 floret positions; 100% = golden reference. It measures closest-pair clearance, not total occupied area. The mirror pattern repeats from 180° to 360°.</p>
       <details class="formula-details">
         <summary>Info / advanced details</summary>
         <div class="formula-note">
           <p><strong>Formula used</strong></p>
           <p class="formula-line"><code>pₙ = c√n (cos(nα), sin(nα))</code></p>
-          <p><code>dmin(α) = min‖pᵢ − pⱼ‖</code> for every seed pair; <code>rseed = dmin / 2</code>; <code>η(α) = Nπrseed² / A</code>; <code>E(α) = 100η(α) / η(αg)</code>.</p>
-          <p><strong>n</strong> = seed index; <strong>c</strong> = scale; <strong>α</strong> = tested angle; <strong>αg</strong> = golden angle; <strong>dmin</strong> = closest seed spacing; <strong>rseed</strong> = largest equal seed radius without pair overlap; <strong>N</strong> = seed count; <strong>A</strong> = fixed region area; <strong>η</strong> = maximum non-overlap area fraction; <strong>E</strong> = relative score versus golden.</p>
+          <p><code>dmin(α) = min‖pᵢ − pⱼ‖</code> for every floret pair; <code>rfloret = dmin / 2</code>; <code>η(α) = Nπrfloret² / A</code>; <code>E(α) = 100η(α) / η(αg)</code>.</p>
+          <p><strong>n</strong> = floret index; <strong>c</strong> = scale; <strong>α</strong> = tested angle; <strong>αg</strong> = golden angle; <strong>dmin</strong> = closest floret spacing; <strong>rfloret</strong> = largest equal floret radius without pair overlap; <strong>N</strong> = floret count; <strong>A</strong> = fixed region area; <strong>η</strong> = maximum non-overlap area fraction; <strong>E</strong> = relative score versus golden.</p>
         </div>
         <p class="curve-reference">Underlying placement has a closed form: <code>rₙ = c√n</code>, <code>θₙ = nα</code>, <code>α = 2π(1 − 1/φ)</code>, with <code>φ = (1 + √5)/2</code>. This finite-500-seed score curve is numerical, not a single closed-form equation. Reference: Vogel, H. (1979), <cite>A better way to construct the sunflower head</cite>, <i>Mathematical Biosciences</i> 44, 179–189. DOI 10.1016/0025-5564(79)90080-4.</p>
       </details>
@@ -546,7 +582,8 @@
 
     const dot = Math.max(1.9, size / 105);
     ctx.fillStyle = COLORS.seed;
-    for(const [x, y] of points){
+    for(let i = 0; i < points.length; i++){
+      const [x, y] = points[i];
       ctx.beginPath();
       ctx.arc(x, y, dot, 0, Math.PI * 2);
       ctx.fill();
@@ -969,7 +1006,7 @@
       sim.legend.classList.toggle('is-overlap', overlap);
       sim.status.textContent = overlap
         ? 'Overlapping paths: both families land on the same lines.'
-        : 'Distinct families: seeds fill the space evenly.';
+        : 'Distinct families: florets fill the space evenly.';
     }
   }
   sim.angleSlider.addEventListener('input', event => {
@@ -1043,6 +1080,7 @@
       curveObserver.disconnect();
     }, { rootMargin:'200px 0px' });
     curveObserver.observe(curve.section);
+
   }
 
   if('ResizeObserver' in window){
